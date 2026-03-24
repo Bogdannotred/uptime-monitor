@@ -1,4 +1,24 @@
 services:
+    scheduler:
+        build:
+            context: ./vendor/laravel/sail/runtimes/8.4 
+            dockerfile: Dockerfile
+            args:
+                WWWGROUP: '${WWWGROUP:-1000}'
+        image: sail-8.4/app
+        # Schimbăm user-ul în root pentru a avea permisiuni de scriere
+        user: root 
+        # Forțăm pornirea directă a comenzii fără scriptul de entrypoint al Sail
+        command: php artisan schedule:work
+        environment:
+            WWWUSER: '${WWWUSER:-1000}'
+            LARAVEL_SAIL: 1
+        volumes:
+            - '.:/var/www/html'
+        networks:
+            - sail
+        depends_on:
+            - mysql
     laravel.test:
         build:
             context: './vendor/laravel/sail/runtimes/8.4'
@@ -24,6 +44,9 @@ services:
         depends_on:
             - mysql
             - mailpit 
+    
+
+    
     mysql:
         image: 'mysql:8.4'
         ports:

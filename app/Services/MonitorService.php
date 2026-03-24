@@ -3,10 +3,11 @@
 namespace App\Services;
 
 use App\Models\Service;
-use App\Models\CheckLog;
 use Illuminate\Support\Facades\Http;
 use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Facades\DB;
+use App\Notifications\ServiceDownNotification;
+
 
 class MonitorService
 {
@@ -18,6 +19,10 @@ class MonitorService
             $duration = (int) ((microtime(true) - $startTime) * 1000);
 
             $this -> saveResult($service , $response-> status() , $duration);
+
+            if ($response->status() != 200) {
+                $this -> sendAlert($service);
+            }
         }
 
         catch (\Exception $e) {
@@ -39,7 +44,14 @@ class MonitorService
             'status' => $isUp ? 'up' : 'down',
             'last_checked_at' => DB::RAW("NOW()")
         ]);
-
-        
     }
+
+    public function sendAlert(Service $service)
+    {
+        $user = $service->user;
+        if ($user) {
+            $user->notify(new ServiceDownNotification($service));
+        }
+    }
+
 }
