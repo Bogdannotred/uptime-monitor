@@ -1,69 +1,60 @@
 import React from 'react';
-import { useState } from 'react';
-import axios  from 'axios';
+import { useForm } from '@inertiajs/react';
 
 export default function AddUrl() {
-    const [url, setUrl] = useState('');
-    const [name , setName] = useState('');
-    
-    const handleSubmit = async (e) => {
+    const { data, setData, post, processing, errors, reset } = useForm({
+        url: '',
+        name: '',
+    });
+
+    const handleSubmit = (e) => {
         e.preventDefault();
-        console.log('URL submitted:', url);
-        try {
-            await axios.post('http://localhost/api/check-service' , {
-                'url': url,
-                'name': name
-            })
-        } catch (error) {
-            console.error('Error submitting URL:', error); 
-        }
+        console.log("Trimit datele către server...", data);
+        post('/check-service', {
+            onSuccess: () => {
+                reset();
+            },
+            onError: (errors) => {
+                console.error("Serverul a refuzat datele:", errors);
+            }
+        });
     };
 
     return (
         <div className="p-6 text-gray-900">
             <h1 className="text-2xl font-bold mb-4">Add URL</h1>
-            <form>
+            <form onSubmit={handleSubmit}>
                 <div className="mb-4">
-                    <label
-                        htmlFor="url"
-                        className="block text-sm font-medium text-gray-700"
-                    >
-                    URL
-                    </label>
+                    <label className="block text-sm font-medium text-gray-700">URL</label>
                     <input
                         type="text"
-                        name="url"
-                        id="url"
-                        className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 sm:text-sm"
+                        className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:ring-indigo-500 sm:text-sm"
                         placeholder="https://example.com"
-                        value={url}
-                        onChange={(e) => setUrl(e.target.value)}
+                
+                        value={data.url}
+                        onChange={(e) => setData('url', e.target.value)}
                     />
+                    {errors.url && <div className="text-red-500 text-xs mt-1">{errors.url}</div>}
                 </div>
+
                 <div className="mb-4">
-                    <label
-                        htmlFor="name"
-                        className="block text-sm font-medium text-gray-700"
-                    >
-                    Name
-                    </label>
+                    <label className="block text-sm font-medium text-gray-700">Name</label>
                     <input
                         type="text"
-                        name="name"
-                        id="name"
-                        className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 sm:text-sm"
+                        className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:ring-indigo-500 sm:text-sm"
                         placeholder="My Website"
-                        value={name}
-                        onChange={(e) => setName(e.target.value)}
+                        value={data.name}
+                        onChange={(e) => setData('name', e.target.value)}
                     />
+                    {errors.name && <div className="text-red-500 text-xs mt-1">{errors.name}</div>}
                 </div>
+
                 <button
                     type="submit"
-                    onSubmit={handleSubmit}
-                    className="inline-flex items-center rounded-md border border-transparent bg-gray-800 px-4 py-2 text-xs font-semibold uppercase tracking-widest text-white transition duration-150 ease
-                        -in-out hover:bg-gray-700 focus:bg-gray-700 focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:ring-offset-2 active:bg-gray-900"
+                    disabled={processing}
+                    className="inline-flex items-center rounded-md bg-gray-800 px-4 py-2 text-white hover:bg-gray-700 disabled:opacity-50"
                 >
-                    Add URL
+                    {processing ? 'Se salvează...' : 'Add URL'}
                 </button>
             </form>
         </div>

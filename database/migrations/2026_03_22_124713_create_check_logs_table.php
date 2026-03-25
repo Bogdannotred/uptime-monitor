@@ -16,7 +16,7 @@ return new class extends Migration
             $table->foreignId('service_id')->constrained()->cascadeOnDelete();
             $table->integer('status_code');
             $table->integer('response_time');
-            $table->timestamps();
+            $table->timestamp('created_at')->useCurrent();
         });
     }
 

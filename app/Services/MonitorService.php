@@ -54,4 +54,10 @@ class MonitorService
         }
     }
 
+    public function destroy(Service $service)
+    {
+    
+        return $service->delete();
+    }
+
 }

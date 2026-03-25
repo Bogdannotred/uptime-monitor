@@ -8,8 +8,7 @@ use App\Models\Service;
 
 class CheckLog extends Model
 {
-    public $timestamps = true;
-
+    public $timestamps = false;
     protected $fillable = [
         'service_id',
         'status_code',
