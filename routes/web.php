@@ -24,15 +24,13 @@ Route::get('/dashboard', function (Request $request) {
     ]);
 })->middleware(['auth', 'verified'])->name('dashboard');
 
-Route::delete('/services/{service}', [MonitorController::class, 'destroy'])->name('destroy');
-
-Route::post('/services/{service}/update-check-interval', [MonitorController::class, 'updateCheckInterval'])->name('updateCheckInterval');
-
 Route::middleware('auth')->group(function () {
     Route::get('/profile', [ProfileController::class, 'edit'])->name('profile.edit');
     Route::patch('/profile', [ProfileController::class, 'update'])->name('profile.update');
     Route::delete('/profile', [ProfileController::class, 'destroy'])->name('profile.destroy');
     Route::post('/check-service', [MonitorController::class, 'verify'])->name('service.check');
+    Route::delete('/services/{service}', [MonitorController::class, 'destroy'])->name('destroy');
+    Route::post('/services/{service}/update-check-interval', [MonitorController::class, 'updateCheckInterval'])->name('updateCheckInterval');
 });
 
 require __DIR__.'/auth.php';
