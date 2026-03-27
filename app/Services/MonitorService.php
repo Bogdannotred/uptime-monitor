@@ -6,7 +6,10 @@ use App\Models\Service;
 use Illuminate\Support\Facades\Http;
 use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Facades\Notification;
+use Illuminate\Support\Facades\Mail;
 use App\Notifications\ServiceDownNotification;
+use App\Mail\Mail as WelcomeMail;
 
 
 class MonitorService
@@ -20,14 +23,16 @@ class MonitorService
 
             $this -> saveResult($service , $response-> status() , $duration);
 
-            if ($response->status() != 200) {
-                $this -> sendAlert($service);
+            if ($response->failed()) {
+                $this->sendAlert($service, $response->status());
             }
         }
 
         catch (\Exception $e) {
             $this -> saveResult($service , 500 , 0);
             Log::error("Error checking service {$service->id}: " . $e->getMessage());
+            // This is for for testing the notification system
+            //$this->sendAlert($service, 500);
         }
     }
 
@@ -46,12 +51,10 @@ class MonitorService
         ]);
     }
 
-    public function sendAlert(Service $service)
+    public function sendAlert(Service $service, $statusCode)
     {
-        $user = $service->user;
-        if ($user) {
-            $user->notify(new ServiceDownNotification($service));
-        }
+        Notification::route('mail', 'bogdyrosut@gmail.com')
+            ->notify(new ServiceDownNotification($service)); // Pasăm obiectul complet
     }
 
     public function destroy(Service $service)
