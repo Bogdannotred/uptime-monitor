@@ -7,15 +7,22 @@ export default function Show({ service, logs }) {
             <Head title={`Detalii - ${service.name}`} />
 
             <div className="max-w-5xl mx-auto">
-                {/* Header & Navigație */}
                 <div className="mb-8 flex items-center justify-between">
                     <div>
-                        <Link 
-                            href={route('dashboard')} 
-                            className="text-sm text-indigo-600 hover:text-indigo-800 font-medium flex items-center gap-1 mb-2"
+                    <Link 
+                        href={route('dashboard')} 
+                        className="group inline-flex items-center px-4 py-2 bg-white border border-gray-200 text-sm font-bold text-gray-700 rounded-xl shadow-sm hover:bg-indigo-600 hover:text-white hover:border-indigo-600 transition-all duration-200 mb-6"
+                    >
+                        <svg 
+                            className="w-4 h-4 mr-2 transform group-hover:-translate-x-1 transition-transform duration-200" 
+                            fill="none" 
+                            stroke="currentColor" 
+                            viewBox="0 0 24 24"
                         >
-                            ← Înapoi la Dashboard
-                        </Link>
+                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M10 19l-7-7m0 0l7-7m-7 7h18" />
+                        </svg>
+                        Back to Dashboard
+                    </Link>
                         <h1 className="text-3xl font-bold text-gray-900">{service.name}</h1>
                         <p className="text-gray-500">{service.url}</p>
                     </div>
@@ -29,7 +36,6 @@ export default function Show({ service, logs }) {
                     </div>
                 </div>
 
-                {/* Tabelul de Log-uri */}
                 <div className="bg-white shadow-xl rounded-2xl overflow-hidden border border-gray-100">
                     <div className="px-6 py-4 border-b border-gray-100 bg-gray-50/50">
                         <h2 className="text-lg font-bold text-gray-800">Istoric Verificări</h2>
@@ -46,7 +52,6 @@ export default function Show({ service, logs }) {
                                 </tr>
                             </thead>
                             <tbody className="bg-white divide-y divide-gray-200">
-                                {/* 1. FOLOSIM logs.data PENTRU MAPARE */}
                                 {logs.data.length > 0 ? (
                                     logs.data.map((log) => (
                                         <tr key={log.id} className="hover:bg-gray-50 transition-colors">
@@ -83,16 +88,13 @@ export default function Show({ service, logs }) {
                         </table>
                     </div>
 
-                    {/* 2. SISTEMUL DE PAGINARE (Engine-ul) */}
                     <div className="px-6 py-4 bg-gray-50 border-t border-gray-100 flex items-center justify-center">
                         <nav className="flex flex-wrap gap-1">
                             {logs.links.map((link, index) => (
                                 <Link
                                     key={index}
                                     href={link.url || '#'}
-                                    // Previne scroll-ul sus la fiecare click
                                     preserveScroll
-                                    // Transformă label-ul HTML (săgețile) în text vizibil
                                     dangerouslySetInnerHTML={{ __html: link.label }}
                                     onClick={(e) => !link.url && e.preventDefault()}
                                     className={`px-4 py-2 text-sm font-semibold rounded-lg border transition-all ${
