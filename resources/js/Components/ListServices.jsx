@@ -1,5 +1,7 @@
 import React, { useState } from 'react';
-import { router } from '@inertiajs/react';
+import { router , Link } from '@inertiajs/react';
+
+
 
 const StatusBadge = ({ status }) => {
     const isUp = status?.toLowerCase() === 'up' || status?.toLowerCase() === 'active';
@@ -35,8 +37,6 @@ export default function ListServices({ services = [], period = 'weekly' }) {
         <div className="w-full">
             <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center mb-6 gap-4">
                 <h3 className="text-lg font-extrabold text-gray-800 tracking-tight">Active Monitors</h3>
-                
-                {/* Dropdown reparat */}
                 <div className="flex items-center bg-white border border-gray-200 rounded-xl px-3 py-2 shadow-sm focus-within:ring-2 focus-within:ring-indigo-500 transition-all">
                     <span className="text-[10px] font-black text-gray-400 mr-2 uppercase whitespace-nowrap">Stats:</span>
                     <select 
@@ -71,8 +71,23 @@ export default function ListServices({ services = [], period = 'weekly' }) {
                                     <p className="text-[10px] font-mono text-gray-400 truncate mt-0.5">{service.url}</p>
                                 </div>
                                 <StatusBadge status={service.status} />
-                            </div>
 
+
+                                <Link 
+                                    href={route('services.show', service.id)} 
+                                    className="group flex items-center gap-2 px-4 py-2 bg-gray-50 text-gray-600 hover:bg-indigo-600 hover:text-white rounded-xl transition-all border border-gray-100 shadow-sm"
+                                >
+                                    <span className="text-sm font-bold">View Logs</span>
+                                    <svg 
+                                        className="w-4 h-4 transform group-hover:translate-x-1 transition-transform" 
+                                        fill="none" 
+                                        stroke="currentColor" 
+                                        viewBox="0 0 24 24"
+                                    >
+                                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M9 5l7 7-7 7" />
+                                    </svg>
+                                </Link>
+                            </div>
                             <div className="mx-5 p-4 bg-gray-50 rounded-xl flex justify-between items-center border border-gray-100">
                                 <div>
                                     <p className="text-[9px] font-black text-gray-400 uppercase tracking-tighter text-center">Uptime</p>
@@ -84,22 +99,27 @@ export default function ListServices({ services = [], period = 'weekly' }) {
                                     <p className="text-sm font-bold text-gray-700 leading-none mt-1">{service.check_interval}s</p>
                                 </div>
                             </div>
-
+                            
                             <div className="p-5 mt-auto space-y-3">
                                 <form onSubmit={(e) => handleUpdateInterval(e, service.id)} className="flex gap-2">
                                     <input
                                         type="number"
-                                        min="30"
+                                        min="1"
                                         placeholder="Set interval..."
                                         className="w-full text-xs py-2 rounded-lg border-gray-100 focus:ring-indigo-500 focus:border-indigo-500 transition-all"
                                         onChange={(e) => setCheckIntervals({...checkIntervals, [service.id]: e.target.value})}
                                     />
                                     <button className="px-4 py-2 bg-gray-900 text-white text-[10px] font-black rounded-lg hover:bg-black transition-colors uppercase tracking-widest">Update</button>
                                 </form>
+                                
                                 <button onClick={() => handleDelete(service.id)} className="w-full text-[10px] font-black text-red-300 hover:text-red-500 transition-colors uppercase tracking-widest text-center pt-2 border-t border-gray-50">
                                     Delete Monitor
                                 </button>
+
+                                
+                                
                             </div>
+                            
                         </div>
                     ))}
                 </div>

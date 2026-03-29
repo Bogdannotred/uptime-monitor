@@ -80,4 +80,14 @@ class MonitorController extends Controller
             return back()->with('message', 'Service deleted successfully!');
         }
     }
-}
+
+    public function show(Request $request , $id) 
+    {
+        $service = $request->user()->services()->findOrFail($id);
+
+        return inertia('Services/Show', [
+            'service' => $service,
+            'logs' => $service->logs()->latest()->paginate(10)
+        ]);
+    }
+}       
