@@ -32,4 +32,8 @@ class Service extends Model
     {
         return $this->belongsTo(User::class);
     }
+    public function dailyStats(): HasMany
+    {
+        return $this->hasMany(DailyStats::class);
+    }
 }

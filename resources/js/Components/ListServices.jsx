@@ -1,75 +1,108 @@
-import react from 'react';
-import { Head } from '@inertiajs/react';
+import React, { useState } from 'react';
 import { router } from '@inertiajs/react';
-import { useState } from 'react';
 
+const StatusBadge = ({ status }) => {
+    const isUp = status?.toLowerCase() === 'up' || status?.toLowerCase() === 'active';
+    return (
+        <span className={`inline-flex items-center px-2.5 py-1 rounded-lg text-[9px] font-black uppercase tracking-wider ${isUp ? 'bg-green-100 text-green-700' : 'bg-red-100 text-red-700'}`}>
+            <span className={`w-2 h-2 mr-1.5 rounded-full ${isUp ? 'bg-green-500' : 'bg-red-500'}`}></span>
+            {status || 'Unknown'}
+        </span>
+    );
+};
 
-export default function ListServices({ services }) {
+export default function ListServices({ services = [], period = 'weekly' }) {
+    const [checkIntervals, setCheckIntervals] = useState({});
 
-    const [CheckInterval, setCheckInterval] = useState({}); 
-
-    const handleCheckInterval = (serviceId) => (e) => {
-        e.preventDefault();
-        const valueToSend = CheckInterval[serviceId];
-        router.post(`/services/${serviceId}/update-check-interval`, {
-            check_interval: valueToSend,
-        }, {
-            onSuccess: () => {
-                console.log(`Check interval for service with ID ${serviceId} updated successfully.`);
-            }
-        });
+    const handlePeriodChange = (e) => {
+        router.get('/dashboard', { period: e.target.value }, { preserveState: true, preserveScroll: true });
     };
 
-    const handleDelete = (serviceId) => {
-        if (confirm('Are you sure you want to delete this service?')) {
-            router.delete(`/services/${serviceId}`, {
-                onSuccess: () => {
-                    console.log(`Service with ID ${serviceId} deleted successfully.`);
-                }
-            });
+    const handleUpdateInterval = (e, serviceId) => {
+        e.preventDefault();
+        const value = checkIntervals[serviceId];
+        if (!value) return;
+        router.post(`/services/${serviceId}/update-check-interval`, { check_interval: value }, { preserveScroll: true });
+    };
+
+    const handleDelete = (id) => {
+        if (confirm('Permanently remove this monitor?')) {
+            router.delete(`/services/${id}`, { preserveScroll: true });
         }
     };
-    return (
-        <div className="p-6 text-gray-900">
-            <Head title="My Services
-            " />
-            <h1 className="text-2xl font-bold mb-4">My Services</h1>
-            {services.length === 0 ? (
-                <p>You have no services added yet.</p>
-            ) : (
-                <ul className="space-y-4">
-                    {services.map((service) => (
-                        <li key={service.id} className="border p-4 rounded-md">
-                            <h2 className="text-lg font-semibold">{service.name}</h2>
-                            <p className="text-sm text-gray-600">{service.url}</p>
-                            <p className="text-sm text-gray-500">Status: {service.status}</p>
-                            <button
-                                onClick={() => handleDelete(service.id)}
-                                className="mt-2 inline-flex items-center rounded-md bg-red-600 px-3 py-1 text-sm text-white hover:bg-red-500"
-                            >
-                                Delete Service
-                            </button>
 
-                            <form onSubmit={handleCheckInterval(service.id)}>
-                                <h1>
-                                    {service.check_interval} - Current Check Interval (seconds)
-                                </h1>
-                                <input
-                                    type="number"
-                                    value={CheckInterval[service.id] || ''}
-                                    onChange={(e) => setCheckInterval({...CheckInterval, [service.id]: e.target.value})}
-                                    className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 sm:text-sm"
-                                />
-                                <button
-                                    type="submit"
-                                    className="mt-2 inline-flex items-center rounded-md bg-blue-600 px-3 py-1 text-sm text-white hover:bg-blue-500"
-                                >
-                                    Update Check Interval
+    return (
+        <div className="w-full">
+            <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center mb-6 gap-4">
+                <h3 className="text-lg font-extrabold text-gray-800 tracking-tight">Active Monitors</h3>
+                
+                {/* Dropdown reparat */}
+                <div className="flex items-center bg-white border border-gray-200 rounded-xl px-3 py-2 shadow-sm focus-within:ring-2 focus-within:ring-indigo-500 transition-all">
+                    <span className="text-[10px] font-black text-gray-400 mr-2 uppercase whitespace-nowrap">Stats:</span>
+                    <select 
+                        value={period} 
+                        onChange={handlePeriodChange} 
+                        className="border-none p-0 pr-8 text-xs font-black text-indigo-600 focus:ring-0 cursor-pointer bg-transparent appearance-none"
+                        style={{
+                            backgroundImage: `url("data:image/svg+xml,%3csvg xmlns='http://www.w3.org/2000/svg' fill='none' viewBox='0 0 20 20'%3e%3cpath stroke='%234f46e5' stroke-linecap='round' stroke-linejoin='round' stroke-width='1.5' d='M6 8l4 4 4-4'/%3e%3c/svg%3e")`,
+                            backgroundRepeat: 'no-repeat',
+                            backgroundPosition: 'right center',
+                            backgroundSize: '1.2rem',
+                        }}
+                    >
+                        <option value="weekly">Last 7 Days</option>
+                        <option value="monthly">Last 30 Days</option>
+                        <option value="yearly">Last 365 Days</option>
+                    </select>
+                </div>
+            </div>
+
+            {services.length === 0 ? (
+                <div className="bg-white border-2 border-dashed border-gray-100 rounded-3xl p-16 text-center">
+                    <p className="text-gray-400 text-sm font-medium italic">No endpoints configured yet.</p>
+                </div>
+            ) : (
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-4 lg:gap-6">
+                    {services.map((service) => (
+                        <div key={service.id} className="bg-white border border-gray-200 rounded-2xl shadow-sm hover:shadow-md hover:border-indigo-200 transition-all flex flex-col overflow-hidden group">
+                            <div className="p-5 flex justify-between items-start bg-white">
+                                <div className="min-w-0">
+                                    <h4 className="font-bold text-gray-900 truncate">{service.name}</h4>
+                                    <p className="text-[10px] font-mono text-gray-400 truncate mt-0.5">{service.url}</p>
+                                </div>
+                                <StatusBadge status={service.status} />
+                            </div>
+
+                            <div className="mx-5 p-4 bg-gray-50 rounded-xl flex justify-between items-center border border-gray-100">
+                                <div>
+                                    <p className="text-[9px] font-black text-gray-400 uppercase tracking-tighter text-center">Uptime</p>
+                                    <p className="text-xl font-black text-indigo-600 leading-none mt-1">{service.uptime_percentage}%</p>
+                                </div>
+                                <div className="h-8 w-[1px] bg-gray-200"></div>
+                                <div className="text-right">
+                                    <p className="text-[9px] font-black text-gray-400 uppercase tracking-tighter text-center">Interval</p>
+                                    <p className="text-sm font-bold text-gray-700 leading-none mt-1">{service.check_interval}s</p>
+                                </div>
+                            </div>
+
+                            <div className="p-5 mt-auto space-y-3">
+                                <form onSubmit={(e) => handleUpdateInterval(e, service.id)} className="flex gap-2">
+                                    <input
+                                        type="number"
+                                        min="30"
+                                        placeholder="Set interval..."
+                                        className="w-full text-xs py-2 rounded-lg border-gray-100 focus:ring-indigo-500 focus:border-indigo-500 transition-all"
+                                        onChange={(e) => setCheckIntervals({...checkIntervals, [service.id]: e.target.value})}
+                                    />
+                                    <button className="px-4 py-2 bg-gray-900 text-white text-[10px] font-black rounded-lg hover:bg-black transition-colors uppercase tracking-widest">Update</button>
+                                </form>
+                                <button onClick={() => handleDelete(service.id)} className="w-full text-[10px] font-black text-red-300 hover:text-red-500 transition-colors uppercase tracking-widest text-center pt-2 border-t border-gray-50">
+                                    Delete Monitor
                                 </button>
-                            </form>
-                        </li>
+                            </div>
+                        </div>
                     ))}
-                </ul>
+                </div>
             )}
         </div>
     );

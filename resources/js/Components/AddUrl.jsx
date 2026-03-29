@@ -2,59 +2,76 @@ import React from 'react';
 import { useForm } from '@inertiajs/react';
 
 export default function AddUrl() {
-    const { data, setData, post, processing, errors, reset } = useForm({
+    const { data, setData, post, processing, errors, reset, transform } = useForm({
         url: '',
         name: '',
     });
 
+    transform((currentData) => {
+        let cleanUrl = currentData.url.trim().replace(/^https?:\/\//i, '');
+        return {
+            ...currentData,
+            url: cleanUrl ? `https://${cleanUrl}` : '',
+        };
+    });
+
     const handleSubmit = (e) => {
         e.preventDefault();
-        console.log("Trimit datele către server...", data);
         post('/check-service', {
-            onSuccess: () => {
-                reset();
-            },
-            onError: (errors) => {
-                console.error("Serverul a refuzat datele:", errors);
-            }
+            onSuccess: () => reset(),
         });
     };
 
     return (
-        <div className="p-6 text-gray-900">
-            <h1 className="text-2xl font-bold mb-4">Add URL</h1>
-            <form onSubmit={handleSubmit}>
-                <div className="mb-4">
-                    <label className="block text-sm font-medium text-gray-700">URL</label>
-                    <input
-                        type="text"
-                        className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:ring-indigo-500 sm:text-sm"
-                        placeholder="https://example.com"
-                
-                        value={data.url}
-                        onChange={(e) => setData('url', e.target.value)}
-                    />
-                    {errors.url && <div className="text-red-500 text-xs mt-1">{errors.url}</div>}
+        <div className="p-6 md:p-8">
+            <div className="mb-6">
+                <div className="inline-flex items-center justify-center w-10 h-10 bg-indigo-50 text-indigo-600 rounded-xl mb-3">
+                    <svg xmlns="http://www.w3.org/2000/svg" className="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 9v3m0 0v3m0-3h3m-3 0H9m12 0a9 9 0 11-18 0 9 9 0 0118 0z" />
+                    </svg>
                 </div>
+                <h1 className="text-xl font-bold text-gray-900">New Monitor</h1>
+                <p className="text-sm text-gray-500">Add a website to start tracking uptime.</p>
+            </div>
 
-                <div className="mb-4">
-                    <label className="block text-sm font-medium text-gray-700">Name</label>
+            <form onSubmit={handleSubmit} className="space-y-5">
+                <div>
+                    <label htmlFor="name" className="block text-xs font-bold text-gray-500 uppercase mb-1 ml-1">Friendly Name</label>
                     <input
+                        id="name"
                         type="text"
-                        className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:ring-indigo-500 sm:text-sm"
+                        className={`block w-full px-4 py-3 rounded-xl border border-gray-200 focus:ring-2 focus:ring-indigo-500 focus:border-transparent transition-all sm:text-sm ${errors.name ? 'border-red-300 bg-red-50' : ''}`}
                         placeholder="My Website"
                         value={data.name}
                         onChange={(e) => setData('name', e.target.value)}
                     />
-                    {errors.name && <div className="text-red-500 text-xs mt-1">{errors.name}</div>}
+                    {errors.name && <p className="text-red-500 text-xs mt-1 ml-1">{errors.name}</p>}
+                </div>
+
+                <div>
+                    <label htmlFor="url" className="block text-xs font-bold text-gray-500 uppercase mb-1 ml-1">Target URL</label>
+                    <div className="relative group">
+                        <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
+                            <span className="text-gray-400 text-sm font-semibold">https://</span>
+                        </div>
+                        <input
+                            id="url"
+                            type="text"
+                            className={`block w-full pl-16 pr-4 py-3 rounded-xl border border-gray-200 focus:ring-2 focus:ring-indigo-500 focus:border-transparent transition-all sm:text-sm ${errors.url ? 'border-red-300 bg-red-50' : ''}`}
+                            placeholder="example.com"
+                            value={data.url}
+                            onChange={(e) => setData('url', e.target.value)}
+                        />
+                    </div>
+                    {errors.url && <p className="text-red-500 text-xs mt-1 ml-1">{errors.url}</p>}
                 </div>
 
                 <button
                     type="submit"
                     disabled={processing}
-                    className="inline-flex items-center rounded-md bg-gray-800 px-4 py-2 text-white hover:bg-gray-700 disabled:opacity-50"
+                    className="w-full py-3 bg-indigo-600 text-white font-bold rounded-xl shadow-md hover:bg-indigo-700 transition-all active:scale-95 disabled:opacity-50"
                 >
-                    {processing ? 'Se salvează...' : 'Add URL'}
+                    {processing ? 'Saving...' : 'Start Monitoring'}
                 </button>
             </form>
         </div>

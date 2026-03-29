@@ -4,20 +4,25 @@ namespace App\Notifications;
 
 use Illuminate\Notifications\Messages\MailMessage;
 use Illuminate\Notifications\Notification;
+use Illuminate\Contracts\Queue\ShouldQueue;
+use Illuminate\Bus\Queueable;
 
-class ServiceDownNotification extends Notification
+class ServiceDownNotification extends Notification implements ShouldQueue
 {
-
+    use Queueable;
+    
     public $site;
-
+    public $isUp;
 
 
     /**
      * Create a new notification instance.
      */
-    public function __construct($site)
+    public function __construct($site , bool $isUp = false)
     {
         $this->site = $site;
+        $this->isUp = $isUp;
+
     }
 
     /**
@@ -34,15 +39,24 @@ class ServiceDownNotification extends Notification
      * Get the mail representation of the notification.
      */
     public function toMail(object $notifiable): MailMessage
-    {
-        return (new MailMessage)
-            ->error() 
-            ->subject('Alert - Service Down: ' . $this->site->name)
-            ->line('Atention ! Service with URL: ' . $this->site->url . ' is down with status code: ' . $this->site->status)
-            ->line('Name for service: ' . $this->site->name) 
-            ->action('View Service', url('/dashboard'))
-            ->line('Thank you for using our monitoring service!');
-    }
+        {
+            $message = new MailMessage;
+            
+            if ($this->isUp) {
+                $message->success() 
+                        ->subject('✅ Service Back Online: ' . $this->site->name)
+                        ->line('Great news! Service with URL: ' . $this->site->url . ' is back online.');
+            } else {
+                $message->error() 
+                        ->subject('🚨 Alert - Service Down: ' . $this->site->name)
+                        ->line('Attention! Service with URL: ' . $this->site->url . ' is down.');
+            }
+
+            return $message
+                ->line('Status recorded: ' . $this->site->status)
+                ->action('View Dashboard', url('/dashboard'))
+                ->line('Thank you for using our monitoring service!');
+        }
 
     /**
      * Get the array representation of the notification.

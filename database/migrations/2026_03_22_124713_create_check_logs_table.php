@@ -15,8 +15,10 @@ return new class extends Migration
             $table->id();
             $table->foreignId('service_id')->constrained()->cascadeOnDelete();
             $table->integer('status_code');
+            $table->boolean('is_online');
             $table->integer('response_time');
             $table->timestamp('created_at')->useCurrent();
+            $table->index(['service_id', 'created_at']);
         });
     }
 
