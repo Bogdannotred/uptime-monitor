@@ -1,6 +1,7 @@
 import React, { useState } from 'react';
 import { router , Link } from '@inertiajs/react';
-
+import { ToastContainer , toast } from 'react-toastify';
+import 'react-toastify/dist/ReactToastify.css';
 
 
 const StatusBadge = ({ status }) => {
@@ -25,16 +26,24 @@ export default function ListServices({ services = [], period = 'weekly' }) {
         const value = checkIntervals[serviceId];
         if (!value) return;
         router.post(`/services/${serviceId}/update-check-interval`, { check_interval: value }, { preserveScroll: true });
+        toast.success('Check interval updated successfully!', { autoClose: 2000 });
     };
 
     const handleDelete = (id) => {
         if (confirm('Permanently remove this monitor?')) {
             router.delete(`/services/${id}`, { preserveScroll: true });
+            toast.success('Monitor deleted successfully!', { autoClose: 2000 });
         }
     };
 
     return (
+        
         <div className="w-full">
+            <ToastContainer 
+                position="bottom-right" 
+                autoClose={3000} 
+                theme="colored" 
+            />
             <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center mb-6 gap-4">
                 <h3 className="text-lg font-extrabold text-gray-800 tracking-tight">Active Monitors</h3>
                 <div className="flex items-center bg-white border border-gray-200 rounded-xl px-3 py-2 shadow-sm focus-within:ring-2 focus-within:ring-indigo-500 transition-all">

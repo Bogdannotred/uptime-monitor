@@ -1,5 +1,8 @@
 import React from 'react';
 import { useForm } from '@inertiajs/react';
+import { toast, ToastContainer } from 'react-toastify';
+import "react-toastify/dist/ReactToastify.css";
+
 
 export default function AddUrl() {
     const { data, setData, post, processing, errors, reset, transform } = useForm({
@@ -18,7 +21,13 @@ export default function AddUrl() {
     const handleSubmit = (e) => {
         e.preventDefault();
         post('/check-service', {
-            onSuccess: () => reset(),
+            onSuccess: () => {
+                toast.success('Monitor added successfully!', { autoClose: 2000 });
+                reset();
+            },
+            onError: () => {
+                toast.error('Failed to add monitor. Please check your input.', { autoClose: 2000 });
+            }
         });
     };
 
