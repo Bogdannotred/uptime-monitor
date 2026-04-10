@@ -10,6 +10,8 @@ use Illuminate\Bus\Queueable;
 class ServiceDownNotification extends Notification implements ShouldQueue
 {
     use Queueable;
+
+    public $tries = 1;
     
     public $site;
     public $isUp;
@@ -22,7 +24,7 @@ class ServiceDownNotification extends Notification implements ShouldQueue
     {
         $this->site = $site;
         $this->isUp = $isUp;
-
+        $this->onQueue('notifications');
     }
 
     /**

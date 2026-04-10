@@ -4,7 +4,7 @@ use Illuminate\Support\Facades\Schedule;
 use App\Models\Service;
 use Illuminate\Support\Facades\Artisan;
 
-Schedule::command('monitor:check')->everySecond();
+Schedule::command('monitor:check')->everyMinute();
 
 Schedule::call(function () {
     $yesterday = now()->subDay()->toDateString();

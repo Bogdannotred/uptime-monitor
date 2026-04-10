@@ -3,54 +3,53 @@
 namespace App\Services;
 
 use App\Models\Service;
+use App\Models\CheckLog;
 use App\Notifications\ServiceDownNotification;
-use Illuminate\Support\Facades\Http;
-use Illuminate\Support\Facades\Log;
+use Illuminate\Support\Facades\DB;
 
 
 class MonitorService
 {
 
-    public function check(Service $service): void
+    public function processBulkResults(array $results): void
     {
-        $startTime = microtime(true);
+        $logData = [];
+        $serviceUpdates = [];
+        $alerts = [];
+        $now = now();
 
-        try {
-        
-            $response = Http::timeout(10)->get($service->url);
-        
-            $duration = (int) ((microtime(true) - $startTime) * 1000);
-            
-     
-            $isUp = $response->successful();
-            $statusCode = $response->status();
+        foreach($results as $result){
+            $service = $result['service'];
+            $newStatus = $result['is_up'] ? 'up' : 'down';
+            $logData[] = [
+                'service_id'    => $service->id,
+                'status_code'   => $result['status_code'],
+                'response_time' => $result['duration'],
+                'is_online'     => $result['is_up'],
+                'created_at'    => $now
+            ];
 
-            $this->processResult($service, $statusCode, $duration, $isUp);
+            $serviceUpdates[] = [
+                'id'              => $service->id,
+                'name'            => $service->name,
+                'url'             => $service->url, 
+                'user_id'         => $service->user_id, 
+                'status'          => $newStatus,
+                'last_checked_at' => $now,
+            ];
 
-        } catch (\Exception $e) {
-            Log::error("Error checking service {$service->id}: " . $e->getMessage());
-            
-            $this->processResult($service, 500, 0, false);
+            if ($service->status !== 'unknown' && $service->status !== $newStatus) {
+                $alerts[] = ['service' => $service, 'is_up' => $result['is_up']];
+            }
         }
-    }
 
+        DB::transaction(function () use ($logData, $serviceUpdates) {
+            CheckLog::insert($logData);
+            Service::upsert($serviceUpdates, ['id'], ['status', 'last_checked_at']);
+        });
 
-    private function processResult(Service $service, int $statusCode, int $duration, bool $isUp): void
-    {
-        $oldStatus = $service->status;
-        $newStatus = $isUp ? 'up' : 'down';
-        $service->logs()->create([
-            'status_code'   => $statusCode,
-            'response_time' => $duration,
-            'is_online'     => $isUp, 
-        ]);
-        $service->update([
-            'status'          => $newStatus,
-            'last_checked_at' => now(), 
-        ]);
-
-        if ($oldStatus !== $newStatus) {
-            $this->sendAlert($service, $isUp);
+        foreach ($alerts as $alert) {
+            $this->sendAlert($alert['service'], $alert['is_up']);
         }
     }
 

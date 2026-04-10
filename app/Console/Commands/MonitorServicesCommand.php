@@ -6,7 +6,6 @@ use Illuminate\Console\Attributes\Description;
 use Illuminate\Console\Attributes\Signature;
 use Illuminate\Console\Command;
 use App\Models\Service;
-use App\Services\MonitorService;
 
 #[Signature('monitor:check')]
 #[Description('Iterating and checking all services')]
@@ -16,22 +15,15 @@ class MonitorServicesCommand extends Command
     /**
      * Execute the console command.
      */
-public function handle(MonitorService $monitorService): void
-{
-    $currentTimeStamp = now()->timestamp;
+    public function handle(): void {
+        $timestamp = now()->timestamp;
+        
+        $maxId = Service::max('id') ?? 0;
+        $chunkSize = 1000;
 
-    $services = \App\Models\Service::all()->filter(function ($service) use ($currentTimeStamp) {
-        return $service->check_interval > 0 && ($currentTimeStamp % $service->check_interval === 0);
-    });
+        for ($i = 1 ; $i <= $maxId ; $i += $chunkSize){
+            dispatch(new \App\Jobs\ScanServiceRangeJob($i, $i + $chunkSize - 1, $timestamp));
+        }
 
-    if ($services->isEmpty()) {
-        $this->info("No services to check at timestamp $currentTimeStamp.");
-        return;
     }
-
-    foreach ($services as $service) {
-        $this->info("Checking: {$service->url} (Interval: {$service->check_interval}seconds)");
-        $monitorService->check($service);
-    }
-}
-}
+} 
